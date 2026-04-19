@@ -1,0 +1,42 @@
+name: Android Build (ElectroCalc Pro)
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch: # Permite ejecutar la compilación manualmente desde GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🏗 Setup Repository
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: 📦 Install Dependencies
+        working-directory: .
+        run: npm install --legacy-peer-deps
+
+      - name: 🚀 Expo Prebuild
+        run: npx expo prebuild --platform android
+
+      - name: 🛠️ Build APK with Gradle
+        working-directory: ./android
+        run: ./gradlew assembleDebug # Usamos debug para una compilación más rápida y sin necesidad de firma para pruebas iniciales
+
+      - name: 📂 Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ElectroCalc-Pro-Debug-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
